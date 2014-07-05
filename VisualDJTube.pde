@@ -21,6 +21,8 @@ Maxim maxim;
 AudioPlayer player1;
 AudioPlayer player2;
 float speedAdjust=1.0;
+int MEMORY_SIZE = 200;
+float[] memory = new float[MEMORY_SIZE];
 
 
 void setup()
@@ -33,7 +35,12 @@ void setup()
   maxim = new Maxim(this);
   player1 = maxim.loadFile("beat1.wav");
   player1.setLooping(true);
-  player2 = maxim.loadFile("beat2.wav");
+  //player1 = maxim.loadFile("440Hz_44100Hz_16bit_05sec.wav");
+  player1 = maxim.loadFile("audiocheck.net_saw_500Hz_-3dBFS_3s.wav");
+  //player1 = maxim.loadFile("beat2.wav");
+  player1.setLooping(true);
+  player2 = maxim.loadFile("audiocheck.net_sqr_100Hz_-3dBFS_3s.wav");
+  //player2 = maxim.loadFile("beat2.wav");
   player2.setLooping(true);
   background(10);
 }
@@ -81,6 +88,18 @@ void draw()
 
       rotateDeck2 = 0;
     }
+  }
+
+  for (int i = 1; i < MEMORY_SIZE; i++) {
+    memory[i - 1] = memory[i];
+  }
+  memory[MEMORY_SIZE - 1] = player1.getSample() / 500;
+  for (int i = 1; i < MEMORY_SIZE; i++) {
+    int j = i - 1;
+    stroke(255, 0, 0);
+    line(j*2, memory[j] + 300, i*2, memory[i]+ 300);
+    //point(i*2, memory[i] + 300);
+    //rect(i*2, 300, 2, memory[i]);
   }
 }
 
