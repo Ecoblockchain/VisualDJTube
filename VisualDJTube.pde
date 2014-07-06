@@ -3,45 +3,34 @@
 //Copyright (c) 2013 Mick Grierson, Matthew Yee-King, Marco Gillies
 
 
-int tvx, tvy;
-int animx, animy;
-int deck1x, deck1y;
-int deck2x, deck2y;
+int[] deckX = new int[4];
+boolean[] deckPlaying = new boolean[4];
+float[] rotateDeck = new float[4];
+AudioPlayer[] player = new AudioPlayer[4];
+int[][] colors = {{255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 255}};
 
-boolean deck1Playing = false;
-boolean deck2Playing = false;
-float rotateDeck1 = 0;
-float rotateDeck2 = 0;
-float currentFrame = 0;
-int margin = width/40;
-PImage [] images;
 PImage [] recordPlayer;
-PImage TV;
+int recordWidth = 150;
+int recordHeight = 150;
 Maxim maxim;
-AudioPlayer player1;
-AudioPlayer player2;
-float speedAdjust=1.0;
 int MEMORY_SIZE = 200;
-float[] memory = new float[MEMORY_SIZE];
+float[][] memory = new float[4][MEMORY_SIZE];
 
 
 void setup()
 {
   size(768,1024);
   imageMode(CENTER);
-  images = loadImages("Animation_data/movie", ".jpg", 134);
   recordPlayer = loadImages("black-record_", ".png", 36);
-  TV = loadImage("TV.png");
   maxim = new Maxim(this);
-  player1 = maxim.loadFile("beat1.wav");
-  player1.setLooping(true);
-  //player1 = maxim.loadFile("440Hz_44100Hz_16bit_05sec.wav");
-  player1 = maxim.loadFile("audiocheck.net_saw_500Hz_-3dBFS_3s.wav");
-  //player1 = maxim.loadFile("beat2.wav");
-  player1.setLooping(true);
-  player2 = maxim.loadFile("audiocheck.net_sqr_100Hz_-3dBFS_3s.wav");
-  //player2 = maxim.loadFile("beat2.wav");
-  player2.setLooping(true);
+  player[0] = maxim.loadFile("audiocheck.net_saw_50Hz_-3dBFS_3s.wav");
+  player[0].setLooping(true);
+  player[1] = maxim.loadFile("audiocheck.net_saw_100Hz_-3dBFS_3s.wav");
+  player[1].setLooping(true);
+  player[2] = maxim.loadFile("audiocheck.net_saw_300Hz_-3dBFS_3s.wav");
+  player[2].setLooping(true);
+  player[3] = maxim.loadFile("audiocheck.net_saw_500Hz_-3dBFS_3s.wav");
+  player[3].setLooping(true);
   background(10);
 }
 
@@ -49,98 +38,47 @@ void draw()
 {
   background(10); 
   imageMode(CENTER);
-  image(images[(int)currentFrame], width/2, images[0].height/2+margin, images[0].width, images[0].height);
-  image(TV, width/2, TV.height/2+margin, TV.width, TV.height);
-  deck1x = (width/2)-recordPlayer[0].width/2-(margin*10);
-  deck1y = TV.height+recordPlayer[0].height/2+margin;
-  image(recordPlayer[(int) rotateDeck1], deck1x, deck1y, recordPlayer[0].width, recordPlayer[0].height);
-  deck2x = (width/2)+recordPlayer[0].width/2+(margin*10);
-  deck2y = TV.height+recordPlayer[0].height/2+margin;
-  image(recordPlayer[(int) rotateDeck2], deck2x, deck2y, recordPlayer[0].width, recordPlayer[0].height);
+  for (int i = 0; i < deckX.length; i++) {
+    deckX[i] = (2*i + 1) * width / 8;
+    image(recordPlayer[(int) rotateDeck[i]], deckX[i], 3*recordHeight/4,
+          recordWidth, recordHeight);
 
-  if (deck1Playing || deck2Playing) {
-    
-    player1.speed(speedAdjust);
-    player2.speed((player2.getLengthMs()/player1.getLengthMs())*speedAdjust);
-    currentFrame= currentFrame+1*speedAdjust;
-  }
+    if (deckPlaying[i]) {
+      rotateDeck[i] += 1;
 
-  if (currentFrame >= images.length) {
-
-    currentFrame = 0;
-  }
-
-  if (deck1Playing) {
-
-    rotateDeck1 += 1*speedAdjust;
-
-    if (rotateDeck1 >= recordPlayer.length) {
-
-      rotateDeck1 = 0;
+      if (rotateDeck[i] >= recordPlayer.length) {
+        rotateDeck[i] = 0;
+      }
     }
   }
 
-  if (deck2Playing) {
-
-    rotateDeck2 += 1*speedAdjust;
-
-    if (rotateDeck2 >= recordPlayer.length) {
-
-      rotateDeck2 = 0;
+  for (int i = 0; i < memory.length; i++) {
+    for (int j = 1; j < MEMORY_SIZE; j++) {
+      memory[i][j - 1] = memory[i][j];
     }
-  }
+    memory[i][MEMORY_SIZE - 1] = player[i].getSample() / 500;
 
-  for (int i = 1; i < MEMORY_SIZE; i++) {
-    memory[i - 1] = memory[i];
-  }
-  memory[MEMORY_SIZE - 1] = player1.getSample() / 500;
-  for (int i = 1; i < MEMORY_SIZE; i++) {
-    int j = i - 1;
-    stroke(255, 0, 0);
-    line(j*2, memory[j] + 300, i*2, memory[i]+ 300);
-    //point(i*2, memory[i] + 300);
-    //rect(i*2, 300, 2, memory[i]);
+    for (int j = 1; j < MEMORY_SIZE; j++) {
+      int prev = j - 1;
+      stroke(colors[i][0], colors[i][1], colors[i][2]);
+      line(prev*width/MEMORY_SIZE, memory[i][prev] + 300 + 100*i,
+           j*width/MEMORY_SIZE, memory[i][j] + 300 + 100*i);
+    }
   }
 }
 
 
 void mouseClicked()
 {
+  for (int i = 0; i < deckX.length; i++) {
+    if (dist(mouseX, mouseY, deckX[i], recordHeight/2) < recordWidth/2) {
+      deckPlaying[i] = !deckPlaying[i];
+    }
 
-  //if (mouseX > (width/2)-recordPlayer[0].width-(margin*10) && mouseX < recordPlayer[0].width+((width/2)-recordPlayer[0].width-(margin*10)) && mouseY>TV.height+margin && mouseY <TV.height+margin + recordPlayer[0].height) {
-  if(dist(mouseX, mouseY, deck1x, deck1y) < recordPlayer[0].width/2){
-    
-    deck1Playing = !deck1Playing;
-  }
-
-  if (deck1Playing) {
-    player1.play();
-  } 
-  else {
-
-    player1.stop();
-  }
-
-  if(dist(mouseX, mouseY, deck2x, deck2y) < recordPlayer[0].width/2){
-  
-    deck2Playing = !deck2Playing;
-  }
-
-  if (deck2Playing) {
-    player2.play();
-  } 
-  else {
-
-    player2.stop();
+    if (deckPlaying[i]) {
+      player[i].play();
+    } else {
+      player[i].stop();
+    }
   }
 }
-
-void mouseDragged() {
-   
- if (mouseY>height/2) {
-  
-   speedAdjust=map(mouseX,0,width,0,2);
-   
- } 
-}
-
