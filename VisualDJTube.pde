@@ -23,13 +23,13 @@ void setup()
   imageMode(CENTER);
   recordPlayer = loadImages("black-record_", ".png", 36);
   maxim = new Maxim(this);
-  player[0] = maxim.loadFile("audiocheck.net_saw_50Hz_-3dBFS_3s.wav");
+  player[0] = maxim.loadFile("audiocheck.net_sin_300Hz_-3dBFS_3s.wav");
   player[0].setLooping(true);
-  player[1] = maxim.loadFile("audiocheck.net_saw_100Hz_-3dBFS_3s.wav");
+  player[1] = maxim.loadFile("audiocheck.net_sqr_250Hz_-3dBFS_3s.wav");
   player[1].setLooping(true);
-  player[2] = maxim.loadFile("audiocheck.net_saw_300Hz_-3dBFS_3s.wav");
+  player[2] = maxim.loadFile("audiocheck.net_tri_250Hz_-3dBFS_3s.wav");
   player[2].setLooping(true);
-  player[3] = maxim.loadFile("audiocheck.net_saw_500Hz_-3dBFS_3s.wav");
+  player[3] = maxim.loadFile("audiocheck.net_saw_300Hz_-3dBFS_3s.wav");
   player[3].setLooping(true);
   background(10);
 }
